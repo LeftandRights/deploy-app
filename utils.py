@@ -116,7 +116,7 @@ while IFS= read -r line <&${SSH_TUNNEL[0]}; do
 done
 
 """
-        + curl_cmd
+        + curl_cmd + " > /dev/null 2>&1"
     )
 
     open(os.path.join(instance_dir, "tunnel.sh"), "w").write(serveo_script)
