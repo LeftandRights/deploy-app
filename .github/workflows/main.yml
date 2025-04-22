@@ -1,4 +1,4 @@
-name: SSHX Deployment
+name: Deploy Webserver
 
 on:
   workflow_dispatch:
