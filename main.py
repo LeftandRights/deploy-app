@@ -527,7 +527,7 @@ if current_page == "instance" and current_instance_id:
                             });
                             term.open(document.getElementById('terminal'));
                             term.write(`%s`);
-                        </script>""" % result.stdout.replace("`", "\u0060") + ("\n \u200b" * spacing_count if std_len < terminal_l else "")
+                        </script>""" % result.stdout
 
                         components.html(html_code, height=470, scrolling=False)
 
