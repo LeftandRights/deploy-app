@@ -2,7 +2,7 @@ import requests, os
 
 # === CONFIG ===
 GITHUB_TOKEN = os.getenv("GIT_API_TOKEN")
-REPO = "LeftandRights/sshx"  # format: user/repo
+REPO = "LeftandRights/deploy-app"  # format: user/repo
 HEADERS = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github+json"}
 
 # === GET ALL WORKFLOW RUNS ===
