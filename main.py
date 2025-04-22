@@ -107,19 +107,6 @@ def run_container(instance_id) -> None:
     threading.Thread(target=execute, args=(instance_id,)).start()
 
 
-def execute_the_first_time() -> None:
-    client_data = utils.load_instances()
-    print("Executing the first time startup")
-
-    for data in client_data:
-        if data["status"] != "running":
-            continue
-
-        data["status"] = "stopped"
-        utils.write(data["instance_id"], data)
-        run_container(data["instance_id"])
-
-
 def instance_stats(instance_id) -> dict:
     result = subprocess.run(
         [
@@ -172,14 +159,8 @@ current_view = streamlit.query_params.get("view", "usage")
 current_filename = streamlit.query_params.get("filename")
 current_directory = streamlit.query_params.get("dir", "/")
 
-
-streamlit.session_state["isLogged"] = True
-
 status = {"stopped": "🔴 Stopped", "starting": "🟡 Starting", "running": "🟢 Running", "stopping": "🟡 Stopping"}
 
-if os.path.exists("./first_time"):
-    os.remove("first_time")
-    execute_the_first_time()
 
 if current_page == "login":
     l, m, r = streamlit.columns([2, 4, 2])
@@ -248,7 +229,7 @@ if current_page == "dashboard":
             key="create_instance_btn",
             use_container_width=True,
             on_click=partial(create_instances, name, ram, cores, username_input, password_input),
-            disabled=(not name) or name in [instance["instance_name"] for instance in instances],
+            disabled=(not name) or name in [instance["instance_name"] for instance in instances] or (not username_input or not password_input),
         )
 
     if instances:
@@ -275,7 +256,7 @@ if current_page == "dashboard":
                         🟡 Status      : {status[instance["status"]]}
                         🧠 RAM         : {instance['ram']}
                         ⚙️ Core        : {instance['core']}
-                        ⏱️ Uptime      : {utils.format_time(int(time.time() - float(instance['uptime']))) if status == '🟢 Running' else 'N/A'}
+                        ⏱️ Uptime      : {utils.format_time(int(time.time() - float(instance['uptime']))) if instance["status"] == 'running' else 'N/A'}
                         """
 
                         streamlit.code(info_block, language="json")
@@ -346,7 +327,7 @@ if current_page == "instance" and current_instance_id:
     if not instance_data:
         streamlit.error("Instance ID not found")
 
-    if (not streamlit.session_state.get("logged_" + current_instance_id, False)) and (
+    if (streamlit.session_state.get("logged_" + current_instance_id, False)) and (
         instance_data["instance_user"] and instance_data["instance_password"]
     ):
         l, m, r = streamlit.columns([2, 4, 2])
@@ -601,6 +582,15 @@ if current_page == "instance" and current_instance_id:
                         streamlit.rerun()
 
                 if (_id := r.text_input("Unique ID", value=user_data["http_forward_id"], max_chars=32)) != user_data["http_forward_id"]:
+                    requests.delete(
+                        user_data["http_forward_server"],
+                        headers={"Content-Type": "application/json"},
+                        json={
+                            "unique_id": user_data["http_forward_id"],
+                            "api_key": os.getenv("PYANY_PASSWD", "a"),
+                        },
+                    )
+
                     data = utils.get_data_by_id(current_instance_id)
                     data["http_forward_id"] = _id
                     utils.write(current_instance_id, data)
@@ -719,5 +709,5 @@ if current_page == "instance" and current_instance_id:
                                 "Delete",
                                 key=secrets.token_urlsafe(10),
                                 use_container_width=True,
-                                on_click=partial(shutil.rmtree, path),
+                                on_click=partial((shutil.rmtree if os.path.isdir(path) else os.remove), path),
                             )
