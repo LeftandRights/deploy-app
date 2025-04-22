@@ -456,40 +456,6 @@ if current_page == "instance" and current_instance_id:
                     if vmStatus == "Running" and result.returncode == 0:
                         # streamlit.code(result.stdout + ("\n \u200b" * spacing_count if std_len < 20 else ""), language="bash", line_numbers=False)
 
-                        html_code = f"""
-                        <style>
-                        /* Hide scrollbar for Chrome/Safari */
-                        #terminal::-webkit-scrollbar {{
-                            display: none;
-                        }}
-                        /* Hide scrollbar for Firefox/Edge */
-                        #terminal {{
-                            scrollbar-width: none;
-                            -ms-overflow-style: none;
-                        }}
-                        </style>
-
-                        <div id="terminal" style="
-                            max-height: 490px;
-                            overflow-y: auto;
-                            background-color: var(--secondary-background-color, #0e1117);
-                            color: var(--text-color, #dcdcdc);
-                            padding: 1rem;
-                            font-family: 'Source Code Pro', Menlo, Monaco, Consolas, monospace;
-                            font-size: 0.875rem;
-                            line-height: 1.4;
-                            border-radius: 0.5rem;
-                            white-space: pre-wrap;
-                            word-wrap: break-word;
-                        ">
-                            <pre>{result.stdout + ("\n \u200b" * spacing_count if std_len < terminal_l else "")}</pre>
-                        </div>
-
-                        <script>
-                            var term = document.getElementById("terminal");
-                            term.scrollTop = term.scrollHeight;
-                        </script>
-                        """
                         html_code = r"""
                         <style>
                         /* Hide scrollbar for Chrome/Safari */
@@ -501,8 +467,10 @@ if current_page == "instance" and current_instance_id:
                             scrollbar-width: none;
                             -ms-overflow-style: none;
                         }}
-                        </style><link href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" rel="stylesheet" />
-                        <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.min.js"></script><div id="terminal-container" style="
+                        </style>
+                        <link href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" rel="stylesheet" />
+                        <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.min.js"></script>
+                        <div id="terminal-container" style="
                             max-height: 490px;
                             overflow-y: auto;
                             background-color: var(--secondary-background-color, #0e1117);
