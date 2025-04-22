@@ -29,6 +29,11 @@ jobs:
       with:
         python-version: "3.12"
 
+    - name: Installing Chrome
+      run: |
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
+        
     - name: Ngrok Installation and Setup
       run: |
         curl -o ngrok-tar.tgz https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
@@ -37,8 +42,12 @@ jobs:
 
     - name: Installing Dependencies
       run: |
-        python3 -m pip install streamlit streamlit_autorefresh requests
+        python3 -m pip install streamlit streamlit_autorefresh requests selenium webdriver_manager
 
+    - name: Extend PyAny webserver
+      run: |
+        python3 pyany_extend.py
+        
     - name: Restore Previous State (Artifacts)
       run: |
         if gh release view 1 > /dev/null 2>&1; then
@@ -76,7 +85,7 @@ jobs:
       run: |
         SLEEP=$((RANDOM % 1800 + 18000))  # 18000–19799
         echo "Sleeping for $SLEEP seconds (~$((SLEEP / 60)) minutes)"
-        sleep $SLEEP
+        sleep 120
         
     - name: Save Session State (Artifacts)
       run: |
