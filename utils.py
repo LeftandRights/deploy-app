@@ -93,7 +93,9 @@ def create_docker_file(instance_id: str) -> None:
     # workspace_dir = os.path.join(instance_dir, "workspace")
 
     curl_cmd = (
-        """curl -X POST -H "Content-Type: application/json" -d "$(printf '{"api_key": "passwd", "destination_url": "%s", "unique_id": """.replace("passwd", os.getenv("PYANY_PASSWD", "a"))
+        """curl -X POST -H "Content-Type: application/json" -d "$(printf '{"api_key": "passwd", "destination_url": "%s", "unique_id": """.replace(
+            "passwd", os.getenv("PYANY_PASSWD", "a")
+        )
         + '"'
         + data["http_forward_id"]
         + '"'
@@ -116,7 +118,8 @@ while IFS= read -r line <&${SSH_TUNNEL[0]}; do
 done
 
 """
-        + curl_cmd + " > /dev/null 2>&1"
+        + curl_cmd
+        + " > /dev/null 2>&1"
     )
 
     open(os.path.join(instance_dir, "tunnel.sh"), "w").write(serveo_script)
@@ -127,10 +130,10 @@ done
 
 nohup bash /tunnel.sh && rm -f /tunnel.sh > /dev/null 2>&1 &
 
-{'echo "\n\n===== 🔧 Installing dependencies... =====\n\n"' if install_command else ""}
+{'echo "\x1b[1m\x1b[34m===== 🔧  Installing dependencies... =====\x1b[0m\n"' if install_command else ""}
 {install_command}
 
-echo "\n\n===== 🚀 Starting application... =====\n\n"
+echo "\n\x1b[1m\x1b[34m===== 🚀  Starting application... =====\x1b[0m\n"
 {run_command}
 tail -f /dev/null"""
         )

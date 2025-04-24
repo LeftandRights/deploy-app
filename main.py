@@ -157,10 +157,10 @@ current_page = streamlit.query_params.get("page", "dashboard")
 current_instance_id = streamlit.query_params.get("instance_id")
 current_view = streamlit.query_params.get("view", "usage")
 current_filename = streamlit.query_params.get("filename")
-current_directory = streamlit.query_params.get("dir", "/")
+current_directory = streamlit.query_params.get("dir", "")
 
 status = {"stopped": "🔴 Stopped", "starting": "🟡 Starting", "running": "🟢 Running", "stopping": "🟡 Stopping"}
-
+streamlit.session_state["isLogged"] = True
 
 if current_page == "login":
     l, m, r = streamlit.columns([2, 4, 2])
@@ -368,8 +368,8 @@ if current_page == "instance" and current_instance_id:
                     if view_name != "file":
                         del streamlit.query_params["dir"]
 
-                    elif "dir" != "/" and view_name == "file":
-                        streamlit.query_params["dir"] = "/" + "/".join(streamlit.query_params["dir"][:-1][1:].split("/")[:-1])
+                    elif streamlit.query_params.get("dir", "") and view_name == "file":
+                        streamlit.query_params["dir"] = "/".join(current_directory.split("/")[:-1])
 
             with streamlit.container(border=True):
                 usageButton = streamlit.button(
@@ -449,55 +449,71 @@ if current_page == "instance" and current_instance_id:
                 )
                 streamlit.divider()
 
-                with streamlit.container(height=450, border=False):
-                    terminal_l = 22
-                    spacing_count = terminal_l - (std_len := len(result.stdout.splitlines()) - 2)
+                terminal_l = 22
+                spacing_count = terminal_l - (std_len := len(result.stdout.splitlines()) - 2)
 
-                    if vmStatus == "Running" and result.returncode == 0:
-                        # streamlit.code(result.stdout + ("\n \u200b" * spacing_count if std_len < 20 else ""), language="bash", line_numbers=False)
+                if vmStatus == "Running" and result.returncode == 0:
+                    # streamlit.code(result.stdout + ("\n \u200b" * spacing_count if std_len < 20 else ""), language="bash", line_numbers=False)
 
-                        html_code = r"""
-                        <style>
-                        /* Hide scrollbar for Chrome/Safari */
-                        #terminal::-webkit-scrollbar {{
-                            display: none;
-                        }}
-                        /* Hide scrollbar for Firefox/Edge */
-                        #terminal {{
-                            scrollbar-width: none;
-                            -ms-overflow-style: none;
-                        }}
-                        </style>
-                        <link href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" rel="stylesheet" />
-                        <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.min.js"></script>
-                        <div id="terminal-container" style="
-                            max-height: 490px;
-                            overflow-y: auto;
-                            background-color: var(--secondary-background-color, #0e1117);
-                            color: var(--text-color, #dcdcdc);
-                            padding: 1rem;
-                            font-family: 'Source Code Pro', Menlo, Monaco, Consolas, monospace;
-                            font-size: 0.875rem;
-                            line-height: 1.4;
-                            border-radius: 0.5rem;
-                            white-space: pre-wrap;
-                            word-wrap: break-word;
-                        ">
-                            <div id="terminal"></div>
-                        </div>
-                        <script>
-                            const term = new Terminal({
-                                theme: {
-                                    background: '#0e1117',
-                                    foreground: '#dcdcdc'
-                                },
-                                convertEol: true
-                            });
-                            term.open(document.getElementById('terminal'));
-                            term.write(`%s`);
-                        </script>""" % result.stdout
+                    html_code = (
+                        r"""
+                    <style>
+                    /* Hide scrollbar inside the terminal only */
+                    #terminal::-webkit-scrollbar {
+                        display: none;
+                    }
+                    #terminal {
+                        scrollbar-width: none;       /* Firefox */
+                        -ms-overflow-style: none;    /* IE/Edge */
+                        overflow-y: hidden;
+                    }
 
-                        components.html(html_code, height=470, scrolling=False)
+                    .xterm-viewport::-webkit-scrollbar {
+                        display: none;
+                    }
+                    .xterm-viewport {
+                        scrollbar-width: none;       /* Firefox */
+                    }
+
+                    </style>
+
+                    <link href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" rel="stylesheet" />
+                    <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.min.js"></script>
+
+                    <div id="terminal-container" style="
+                        max-height: 490px;
+                        background-color: var(--secondary-background-color, #0e1117);
+                        color: var(--text-color, #dcdcdc);
+                        font-family: 'Source Code Pro', Menlo, Monaco, Consolas, monospace;
+                        font-size: 0.875rem;
+                        line-height: 1.4;
+                        border-radius: 0.5rem;
+                    ">
+                        <div id="terminal" style="height: 100%%; width: 100%%;"></div>
+                    </div>
+
+                    <script>
+                        const term = new Terminal({
+                            theme: {
+                                background: '#0e1117',
+                                foreground: '#dcdcdc'
+                            },
+                            convertEol: true,
+                            scrollback: 1000,
+                            disableStdin: true,
+                        });
+                        term.open(document.getElementById('terminal'));
+                        term.write(`%s`);
+                        term.scrollToBottom();
+                    </script>
+                    """
+                        % result.stdout
+                    )
+
+                    components.html(html_code, height=465, scrolling=False)
+
+                if vmStatus != "Running":
+                    streamlit.container(height=470, border=False)
 
                 runButton = streamlit.button(
                     "Run Instance" if vmStatus in ["Not Running", "Starting"] else "Stop Instance",
@@ -654,7 +670,7 @@ if current_page == "instance" and current_instance_id:
                             "Create Directory",
                             use_container_width=True,
                             disabled=button_disabled,
-                            on_click=lambda: os.mkdir(os.path.join(path, file_name_input)),
+                            on_click=partial(os.mkdir, os.path.join(path, file_name_input)),
                         )
 
                     with r:
@@ -662,14 +678,16 @@ if current_page == "instance" and current_instance_id:
                             "Create File",
                             use_container_width=True,
                             disabled=button_disabled,
-                            on_click=lambda: open(os.path.join(path, file_name_input), "w"),
+                            on_click=partial(open, os.path.join(path, file_name_input), "w"),
                         )
 
                     streamlit.divider()
 
                     if file_uploader:
                         for file in file_uploader:
-                            file_path = os.path.join("instances", current_instance_id, "workspace", *current_directory.split("/"), file.name)
+                            file_path = os.path.join(
+                                "instances", current_instance_id, "workspace", *current_directory.split("/").split("/"), file.name
+                            )
 
                             with open(file_path, "wb") as f:
                                 f.write(file.read())
@@ -684,7 +702,7 @@ if current_page == "instance" and current_instance_id:
 
                         streamlit.rerun()
 
-                    streamlit.write("Current directory: `{}`".format(current_directory))
+                    streamlit.write("Current directory: `{}`".format(current_directory or "/"))
 
                     for file in files:
                         left, right = streamlit.columns([7, 1])
@@ -696,7 +714,7 @@ if current_page == "instance" and current_instance_id:
                                 if os.path.isdir(
                                     os.path.join("instances", current_instance_id, "workspace", *current_directory.split("/"), value)
                                 ):
-                                    streamlit.query_params["dir"] = current_directory + value + "/"
+                                    streamlit.query_params["dir"] = streamlit.query_params.get("dir", "") + f"/{value}"
                                     return
 
                                 streamlit.query_params["filename"] = value
