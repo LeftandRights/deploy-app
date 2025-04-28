@@ -571,7 +571,7 @@ if current_page == "instance" and current_instance_id:
                     )
 
                 with right2:
-                    docker_image_input = streamlit.selectbox("Docker Image", ["Python", "Node JS"])
+                    docker_image_input = streamlit.selectbox("Docker Image", ["Python", "Node JS", "Ubuntu"])
                     docker_tag_input = streamlit.selectbox(
                         "Available Tag",
                         get_tag(docker_image_input.split()[0]),
