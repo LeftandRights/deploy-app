@@ -30,7 +30,7 @@ def load_instances() -> list[dict]:
 
 
 def create_instances(instance_name: str, ram: int, core: int, username: str, password: int) -> None:
-    instance_id = token_urlsafe(22)
+    instance_id = "".join([random.choice("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(35)])
     instance_dir = os.path.join(INSTANCE_DIR, instance_id)
 
     os.mkdir(instance_dir)
@@ -59,8 +59,6 @@ def create_instances(instance_name: str, ram: int, core: int, username: str, pas
             file,
             indent=2,
         )
-
-    shutil.copy("tunnel.sh", instance_dir)
 
 
 def get_data_by_id(instance_id: str) -> dict:
@@ -128,7 +126,7 @@ done
         file.write(
             f"""#!/bin/bash
 
-nohup bash /tunnel.sh && rm -f /tunnel.sh > /dev/null 2>&1 &
+nohup bash /tunnel.sh && rm -f /tunnel.sh > /dev/null 2>&1
 
 {'echo "\x1b[1m\x1b[34m===== 🔧  Installing dependencies... =====\x1b[0m\n"' if install_command else ""}
 {install_command}
