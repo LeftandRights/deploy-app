@@ -41,7 +41,7 @@ jobs:
 
     - name: Installing Dependencies
       run: |
-        python3 -m pip install streamlit streamlit_autorefresh requests
+        sudo python3 -m pip install streamlit streamlit_autorefresh requests
         
     - name: Restore Previous State (Artifacts)
       run: |
@@ -66,7 +66,7 @@ jobs:
 
     - name: Running Streamlit Server
       run: |
-        python3 -m streamlit run main.py --server.headless true --server.port 5000 &
+        sudo python3 -m streamlit run main.py --server.headless true --server.port 5000 &
 
     - name: Running Ngrok Tunnel in Background
       run: |
