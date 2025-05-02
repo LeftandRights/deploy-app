@@ -31,7 +31,10 @@ jobs:
 
     - name: Installing Chrome && Extending PyAny
       run: |
-        python3 -m pip install selenium webdriver_manager && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo apt-get install -y ./google-chrome-stable_current_amd64.deb && python3 pyany_extend.py &
+        python3 -m pip install selenium webdriver_manager
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
+        python3 pyany_extend.py &
         
     - name: Ngrok Installation and Setup
       run: |
