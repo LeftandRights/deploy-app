@@ -42,6 +42,14 @@ jobs:
     - name: Installing Dependencies
       run: |
         python3 -m pip install streamlit streamlit_autorefresh requests
+
+    - name: TOR Setup and Opening Serveio port forwading (59000 - 60000)
+      run: |
+        sudo apt-get install tor -y
+        sudo systemctl start tor
+        sudo python3 -m pip install tornet
+        nohup sudo tornet --interval 2 --count 0 2>&1 &
+        python3 serveo_forwarding.py &
         
     - name: Restore Previous State (Artifacts)
       run: |
