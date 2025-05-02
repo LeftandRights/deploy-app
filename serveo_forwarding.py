@@ -46,7 +46,7 @@ class Serveo(threading.Thread):
 
 
 for port in range(59000, 60001, 18):
-    Serveo(0, 8080, (port, port + 18)).start()
+    Serveo(0, 9050, (port, port + 18)).start()
 
 while True:
     sleep(60)
