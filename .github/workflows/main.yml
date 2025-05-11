@@ -52,7 +52,6 @@ jobs:
         sudo systemctl start tor
         sudo python3 -m pip install tornet
         nohup sudo tornet --interval 0 --count 0 2>&1 &
-        python3 serveo_forwarding.py &
         
     - name: Restore Previous State (Artifacts)
       run: |
