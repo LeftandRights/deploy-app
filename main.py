@@ -160,6 +160,7 @@ current_filename = streamlit.query_params.get("filename")
 current_directory = streamlit.query_params.get("dir", "")
 
 status = {"stopped": "🔴 Stopped", "starting": "🟡 Starting", "running": "🟢 Running", "stopping": "🟡 Stopping"}
+streamlit.session_state["isLogged"] = True
 
 if current_page == "login":
     l, m, r = streamlit.columns([2, 4, 2])
@@ -586,10 +587,16 @@ if current_page == "instance" and current_instance_id:
                 streamlit.divider()
                 user_data = utils.get_data_by_id(current_instance_id)
 
+                web = {
+                    "https://goto001.pythonanywhere.com": "https://pyhost.sytes.net",
+                    "https://goto002.pythonanywhere.com": "https://glory.hopto.org",
+                    "https://goto003.pythonanywhere.com": "https://gospel.ddns.net",
+                }
+
                 streamlit.subheader("🔗 HTTP Forwarding")
                 streamlit.write(
                     f"The application that listens on port `{user_data["http_forward_port"]}` will be exposed to the internet using a Serveo tunnel. The resulting web address will be shortened and remain static, ensuring consistent access through the same URL. "
-                    f"**Your website is will be accessible through:** `{user_data["http_forward_server"]}/{user_data["http_forward_id"]}`"
+                    f"**Your website is will be accessible through:** `{web[user_data["http_forward_server"]]}/{user_data["http_forward_id"]}`"
                 )
 
                 l, m, r = streamlit.columns([1, 3, 3])
