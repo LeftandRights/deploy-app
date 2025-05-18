@@ -160,7 +160,6 @@ current_filename = streamlit.query_params.get("filename")
 current_directory = streamlit.query_params.get("dir", "")
 
 status = {"stopped": "🔴 Stopped", "starting": "🟡 Starting", "running": "🟢 Running", "stopping": "🟡 Stopping"}
-streamlit.session_state["isLogged"] = True
 
 if current_page == "login":
     l, m, r = streamlit.columns([2, 4, 2])
@@ -691,15 +690,13 @@ if current_page == "instance" and current_instance_id:
 
                     if file_uploader:
                         for file in file_uploader:
-                            file_path = os.path.join(
-                                "instances", current_instance_id, "workspace", *current_directory.split("/").split("/"), file.name
-                            )
+                            file_path = os.path.join("instances", current_instance_id, "workspace", *current_directory.split("/"), file.name)
 
                             with open(file_path, "wb") as f:
                                 f.write(file.read())
 
                             if file.name.endswith(".zip"):
-                                os.system("unzip " + file_path + " -d " + "instances/" + current_instance_id + "/workspace/")
+                                os.system("unzip -o " + file_path + " -d " + "instances/" + current_instance_id + "/workspace/")
 
                         if streamlit.session_state.get("file_uploader_key", None) is None:
                             streamlit.session_state["file_uploader_key"] = 1
