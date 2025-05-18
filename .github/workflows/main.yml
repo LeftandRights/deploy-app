@@ -81,10 +81,6 @@ jobs:
     - name: Running Ngrok Tunnel in Background
       run: |
         nohup ./ngrok http --url=yeti-glorious-redbird.ngrok-free.app 5000 > ngrok.log 2>&1 &
-
-    - name: Starting SSHX
-      run: |
-        sshx &
       
     - name: Instance keep-alive
       run: |
