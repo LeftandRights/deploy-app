@@ -102,10 +102,10 @@ def create_docker_file(instance_id: str) -> None:
         + "/create"
     )
     serveo_script = (
-        r"""coproc SSH_TUNNEL { ssh -o StrictHostKeyChecking=no -R 80:localhost:5000 serveo.net 2>&1; }
+        r"""coproc SSH_TUNNEL { cloudflared tunnel --url http://localhost:5000 --no-autoupdate 2>&1; }
 
 while IFS= read -r line <&${SSH_TUNNEL[0]}; do
-  if [[ "$line" == *"Forwarding"* ]]; then
+  if [[ "$line" == *"trycloudflare.com"* ]]; then
     _match=$(echo "$line" | grep -oE 'https?://[^ ]+')
     if [[ -n "$_match" ]]; then
       public_url="$_match"
@@ -148,12 +148,15 @@ ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /workspace
+RUN wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared
 COPY workspace/ .
 COPY entrypoint.sh /
 COPY tunnel.sh /
 
 RUN chmod +x /entrypoint.sh
 RUN chmod +x /tunnel.sh
+RUN chmod +x cloudflared
+RUN mv cloudflared /usr/local/bin/
 
 ENTRYPOINT ["/entrypoint.sh"]"""
         )
