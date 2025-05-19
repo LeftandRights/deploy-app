@@ -163,7 +163,7 @@ fi
         file.write(
             f"""#!/bin/bash
 
-nohup bash /tunnel.sh && rm -f /tunnel.sh > /dev/null 2>&1
+/tunnel.sh && rm -f /tunnel.sh > /dev/null 2>&1
 
 {'echo "\x1b[1m\x1b[34m===== 🔧  Installing dependencies... =====\x1b[0m\n"' if install_command else ""}
 {install_command}
