@@ -154,7 +154,7 @@ fi
 
 """
         + curl_cmd
-        + " > /dev/null 2>&1"
+        + ""
     )
 
     open(os.path.join(instance_dir, "tunnel.sh"), "w").write(serveo_script)
