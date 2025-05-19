@@ -153,8 +153,6 @@ else
 fi
 
 """
-        + curl_cmd
-        + ""
     )
 
     open(os.path.join(instance_dir, "tunnel.sh"), "w").write(serveo_script)
@@ -163,7 +161,7 @@ fi
         file.write(
             f"""#!/bin/bash
 
-/tunnel.sh && rm -f /tunnel.sh > /dev/null 2>&1
+/tunnel.sh && rm -f /tunnel.sh > /dev/null 2>&1 && {curl_cmd}  > /dev/null 2>&1
 
 {'echo "\x1b[1m\x1b[34m===== 🔧  Installing dependencies... =====\x1b[0m\n"' if install_command else ""}
 {install_command}
