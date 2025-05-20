@@ -192,7 +192,7 @@ RUN chmod +x cloudflared
 RUN mv cloudflared /usr/local/bin/
 
 ENTRYPOINT ["/entrypoint.sh"]"""
-            % ("RUN apt update -y && apt upgrade -y && apt-get install wget -y" if "ubuntu" in docker_image else "")
+            % ("RUN apt update -y && apt upgrade -y && apt-get install curl wget -y" if "ubuntu" in docker_image else "")
         )
 
 
