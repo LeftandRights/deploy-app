@@ -101,9 +101,7 @@ def create_docker_file(instance_id: str) -> None:
         + data["http_forward_server"]
         + "/create"
     )
-    serveo_script = (
-        r"""\
-#!/bin/bash
+    serveo_script = r"""#!/bin/bash
 
 CLOUDFLARED_LAUNCH_LOG="/tmp/cloudflared_launch_attempt.log"
 URL_OUTPUT_FILE="/workspace/.webaddr"
@@ -151,9 +149,7 @@ else
   wait "$CLOUDFLARED_PID" 2>/dev/null
   exit 1
 fi
-
 """
-    )
 
     open(os.path.join(instance_dir, "tunnel.sh"), "w").write(serveo_script)
 
@@ -161,7 +157,8 @@ fi
         file.write(
             f"""#!/bin/bash
 
-/tunnel.sh && rm -f /tunnel.sh > /dev/null 2>&1 && {curl_cmd}  > /dev/null 2>&1
+/tunnel.sh && rm -f /tunnel.sh > /dev/null 2>&1
+{curl_cmd} > /dev/null 2>&1
 
 {'echo "\x1b[1m\x1b[34m===== 🔧  Installing dependencies... =====\x1b[0m\n"' if install_command else ""}
 {install_command}
@@ -183,6 +180,7 @@ ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /workspace
+%s
 RUN wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O cloudflared
 COPY workspace/ .
 COPY entrypoint.sh /
@@ -194,6 +192,7 @@ RUN chmod +x cloudflared
 RUN mv cloudflared /usr/local/bin/
 
 ENTRYPOINT ["/entrypoint.sh"]"""
+            % ("RUN apt update -y && apt upgrade -y && apt-get install wget -y" if "ubuntu" in docker_image else "")
         )
 
 
