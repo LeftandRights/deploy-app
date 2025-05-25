@@ -69,7 +69,7 @@ jobs:
 
     - name: Running Streamlit Server
       run: |
-        python3 -m streamlit run main.py --server.headless true --server.port 5000 &
+        sudo -E python3 -m streamlit run main.py --server.headless true --server.port 5000 &
 
     - name: Running Ngrok Tunnel in Background
       run: |
