@@ -51,7 +51,7 @@ jobs:
       run: |
         if gh release view 1 > /dev/null 2>&1; then
             echo "🔽 Release v1 found. Downloading..."
-            gh release download 1
+            gh release download 1 > /dev/null 2>&1
             unzip -P "$ZIP_PASSWD" workspace.zip
             rm -f workspace.zip
             
