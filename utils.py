@@ -88,6 +88,8 @@ def create_docker_file(instance_id: str) -> None:
     docker_image = data["instance_config"]["docker_image"]
     install_command = data["instance_config"]["install_command"]
     run_command = data["instance_config"]["run_command"]
+    port = str(data["http_forward_port"])
+    
     # workspace_dir = os.path.join(instance_dir, "workspace")
 
     curl_cmd = (
@@ -108,7 +110,7 @@ URL_OUTPUT_FILE="/workspace/.webaddr"
 
 rm -f "$CLOUDFLARED_LAUNCH_LOG"
 
-cloudflared tunnel --url http://localhost:5000 --no-autoupdate > "$CLOUDFLARED_LAUNCH_LOG" 2>&1 &
+cloudflared tunnel --url http://localhost:%s --no-autoupdate > "$CLOUDFLARED_LAUNCH_LOG" 2>&1 &
 CLOUDFLARED_PID=$!
 
 if [[ -z "$CLOUDFLARED_PID" ]]; then
@@ -149,7 +151,7 @@ else
   wait "$CLOUDFLARED_PID" 2>/dev/null
   exit 1
 fi
-"""
+""" % port
 
     open(os.path.join(instance_dir, "tunnel.sh"), "w").write(serveo_script)
 
