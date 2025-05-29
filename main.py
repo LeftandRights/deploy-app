@@ -160,7 +160,7 @@ current_filename = streamlit.query_params.get("filename")
 current_directory = streamlit.query_params.get("dir", "")
 
 status = {"stopped": "🔴 Stopped", "starting": "🟡 Starting", "running": "🟢 Running", "stopping": "🟡 Stopping"}
-streamlit.session_state["isLogged"] = False
+# streamlit.session_state["isLogged"] = False
 
 if current_page == "login":
     l, m, r = streamlit.columns([2, 4, 2])
