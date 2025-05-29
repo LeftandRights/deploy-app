@@ -160,6 +160,7 @@ current_filename = streamlit.query_params.get("filename")
 current_directory = streamlit.query_params.get("dir", "")
 
 status = {"stopped": "🔴 Stopped", "starting": "🟡 Starting", "running": "🟢 Running", "stopping": "🟡 Stopping"}
+streamlit.session_state["isLogged"] = False
 
 if current_page == "login":
     l, m, r = streamlit.columns([2, 4, 2])
@@ -220,15 +221,15 @@ if current_page == "dashboard":
         streamlit.divider()
         streamlit.write("Credintials below will be used to access the instance dashboard")
 
-        username_input = streamlit.text_input("Username")
-        password_input = streamlit.text_input("Password", type="password")
+        username_input = streamlit.text_input("Username", value="")
+        password_input = streamlit.text_input("Password", type="password", value="")
 
         create = streamlit.button(
             "Create",
             key="create_instance_btn",
             use_container_width=True,
             on_click=partial(create_instances, name, ram, cores, username_input, password_input),
-            disabled=(not name) or name in [instance["instance_name"] for instance in instances] or (not username_input or not password_input),
+            disabled=(not name) or name in [instance["instance_name"] for instance in instances],
         )
 
     if instances:
@@ -283,6 +284,14 @@ if current_page == "dashboard":
                             on_click=partial(run_container, instance["instance_id"]),
                         )
 
+                        deleteButton = streamlit.button(
+                            "Delete Instance",
+                            key=secrets.token_urlsafe(12),
+                            use_container_width=True,
+                            disabled=(instance["status"] != "stopped"),
+                            on_click=partial(shutil.rmtree, f"instances/{instance['instance_id']}"),
+                        )
+
     else:
         with left, streamlit.container(border=True, height=INITIAL_HEIGHT):
             streamlit.markdown("## 👋 Welcome to the Dashboard!")
@@ -326,7 +335,7 @@ if current_page == "instance" and current_instance_id:
     if not instance_data:
         streamlit.error("Instance ID not found")
 
-    if (streamlit.session_state.get("logged_" + current_instance_id, False)) and (
+    if (not streamlit.session_state.get("logged_" + current_instance_id, False)) and (
         instance_data["instance_user"] and instance_data["instance_password"]
     ):
         l, m, r = streamlit.columns([2, 4, 2])
@@ -586,20 +595,23 @@ if current_page == "instance" and current_instance_id:
                 streamlit.divider()
                 user_data = utils.get_data_by_id(current_instance_id)
 
-                web = {
-                    "https://goto001.pythonanywhere.com": "https://pyhost.sytes.net",
-                    "https://goto002.pythonanywhere.com": "https://glory.hopto.org",
-                    "https://goto003.pythonanywhere.com": "https://gospel.ddns.net",
-                }
+                # web = {
+                #     "https://goto001.pythonanywhere.com": "https://pyhost.sytes.net",
+                #     "https://goto002.pythonanywhere.com": "https://glory.hopto.org",
+                #     "https://goto003.pythonanywhere.com": "https://gospel.ddns.net",
+                # }
 
                 streamlit.subheader("🔗 HTTP Forwarding")
                 streamlit.write(
                     f"The application that listens on port `{user_data["http_forward_port"]}` will be exposed to the internet using a Serveo tunnel. The resulting web address will be shortened and remain static, ensuring consistent access through the same URL. "
-                    f"**Your website is will be accessible through:** `{web[user_data["http_forward_server"]]}/{user_data["http_forward_id"]}`"
+                    f"**Your website is will be accessible through:** `https://goto-tau.vercel.app/{user_data["http_forward_id"]}`"
                 )
 
+                if (msg := streamlit.session_state.get("conf_error", None)) is not None:
+                    streamlit.error(msg)
+
                 l, m, r = streamlit.columns([1, 3, 3])
-                m.text_input("Static URL", value=user_data["http_forward_server"], disabled=True)
+                m.text_input("Static URL", value="https://goto-tau.vercel.app/", disabled=True)
 
                 if (_port := l.text_input("Server Port", value=user_data["http_forward_port"])) != user_data["http_forward_port"]:
                     if _port.isdigit() and int(_port) > 0 and int(_port) < 65535:
@@ -609,19 +621,26 @@ if current_page == "instance" and current_instance_id:
                         streamlit.rerun()
 
                 if (_id := r.text_input("Unique ID", value=user_data["http_forward_id"], max_chars=32)) != user_data["http_forward_id"]:
-                    requests.delete(
-                        user_data["http_forward_server"],
-                        headers={"Content-Type": "application/json"},
+                    r = requests.post(
+                        "https://goto-tau.vercel.app/shorten",
                         json={
-                            "unique_id": user_data["http_forward_id"],
-                            "api_key": os.getenv("PYANY_PASSWD", "a"),
+                            "authorization": os.getenv("PYANY_PASSWD"),
+                            "instance_id": current_instance_id,
+                            "unique_id": _id,
+                            "redirect_url": "https://example.com/",
                         },
                     )
 
-                    data = utils.get_data_by_id(current_instance_id)
-                    data["http_forward_id"] = _id
-                    utils.write(current_instance_id, data)
-                    streamlit.rerun()
+                    if r.status_code == 409:
+                        streamlit.session_state["conf_error"] = "Unique ID is not available as it has already been taken."
+                        streamlit.rerun()
+
+                    else:
+                        data = utils.get_data_by_id(current_instance_id)
+                        streamlit.session_state["conf_error"] = None
+                        data["http_forward_id"] = _id
+                        utils.write(current_instance_id, data)
+                        streamlit.rerun()
 
             elif current_view == "file" and current_instance_id:
                 # ROOT_DIR = r"C:\Users\user\OneDrive\Documents\Python\Netter Remake"

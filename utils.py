@@ -29,7 +29,7 @@ def load_instances() -> list[dict]:
     return collections
 
 
-def create_instances(instance_name: str, ram: int, core: int, username: str, password: int) -> None:
+def create_instances(instance_name: str, ram: int, core: int, username: str, password: str) -> None:
     instance_id = "".join([random.choice("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(35)])
     instance_dir = os.path.join(INSTANCE_DIR, instance_id)
 
@@ -52,7 +52,6 @@ def create_instances(instance_name: str, ram: int, core: int, username: str, pas
                 },
                 "instance_user": username,
                 "instance_password": password,
-                "http_forward_server": "https://goto00%s.pythonanywhere.com" % random.randint(1, 3),
                 "http_forward_id": instance_id,
                 "http_forward_port": 5000,
             },
@@ -88,22 +87,23 @@ def create_docker_file(instance_id: str) -> None:
     docker_image = data["instance_config"]["docker_image"]
     install_command = data["instance_config"]["install_command"]
     run_command = data["instance_config"]["run_command"]
-    port = str(data["http_forward_port"])
-    
+    port = data["http_forward_port"]
     # workspace_dir = os.path.join(instance_dir, "workspace")
 
     curl_cmd = (
-        """curl -X POST -H "Content-Type: application/json" -d "$(printf '{"api_key": "passwd", "destination_url": "%s", "unique_id": """.replace(
+        """curl -X POST -H "Content-Type: application/json" -d "$(printf '{"authorization": "passwd", "instance_id": "ins_id", "redirect_url": "%s", "unique_id": """.replace(
             "passwd", os.getenv("PYANY_PASSWD", "a")
+        ).replace(
+            "ins_id", instance_id
         )
         + '"'
         + data["http_forward_id"]
         + '"'
         + r"""}' "$(head -n 1 /workspace/.webaddr | tr -d '\r\n')")" """
-        + data["http_forward_server"]
-        + "/create"
+        + "https://goto-tau.vercel.app/shorten"
     )
-    serveo_script = r"""#!/bin/bash
+    serveo_script = (
+        r"""#!/bin/bash
 
 CLOUDFLARED_LAUNCH_LOG="/tmp/cloudflared_launch_attempt.log"
 URL_OUTPUT_FILE="/workspace/.webaddr"
@@ -151,7 +151,9 @@ else
   wait "$CLOUDFLARED_PID" 2>/dev/null
   exit 1
 fi
-""" % port
+"""
+        % port
+    )
 
     open(os.path.join(instance_dir, "tunnel.sh"), "w").write(serveo_script)
 
@@ -160,7 +162,7 @@ fi
             f"""#!/bin/bash
 
 /tunnel.sh && rm -f /tunnel.sh > /dev/null 2>&1
-{curl_cmd} > /dev/null 2>&1
+{curl_cmd}
 
 {'echo "\x1b[1m\x1b[34m===== 🔧  Installing dependencies... =====\x1b[0m\n"' if install_command else ""}
 {install_command}
