@@ -141,7 +141,7 @@ def instance_stats(instance_id) -> dict:
 
 @streamlit.cache_data
 def get_tag(image: str) -> list[str]:
-    res = requests.get(f"https://registry.hub.docker.com/v2/repositories/library/{image.lower()}/tags?page_size=10")
+    res = requests.get(f"https://registry.hub.docker.com/v2/repositories/library/{image.lower()}/tags?page_size=100")
     return [tag["name"] for tag in res.json()["results"]]
 
 
